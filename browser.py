@@ -1997,9 +1997,15 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
-    # Set app icon
+    # Set app icon - try multiple locations
+    icon = QIcon()
     if ICON_DIR.exists():
-        app.setWindowIcon(QIcon(str(ICON_DIR)))
+        icon = QIcon(str(ICON_DIR))
+    else:
+        # Fallback: try theme icon name (for installed desktop entries)
+        icon = QIcon.fromTheme("bone-browser")
+    if not icon.isNull():
+        app.setWindowIcon(icon)
 
     is_new = not SALT_FILE.exists()
 

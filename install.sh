@@ -40,6 +40,7 @@ mkdir -p "$BIN_DIR"
 echo "[3/6] Installing application..."
 cp "$SOURCE_DIR/browser.py" "$INSTALL_DIR/"
 cp "$SOURCE_DIR/run.sh" "$INSTALL_DIR/"
+cp "$SOURCE_DIR/icon.png" "$INSTALL_DIR/"
 chmod +x "$INSTALL_DIR/run.sh"
 
 # Install icons
