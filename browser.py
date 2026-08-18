@@ -44,7 +44,7 @@ import base64
 
 APP_NAME = "Bone Browser"
 APP_VERSION = "2.0.0"
-DATA_DIR = Path.home() / ".darknet-browser"
+DATA_DIR = Path.home() / ".bone-browser"
 CONFIG_FILE = DATA_DIR / "config.enc"
 SALT_FILE = DATA_DIR / "salt.key"
 BOOKMARKS_FILE = DATA_DIR / "bookmarks.enc"
@@ -1091,7 +1091,7 @@ class ShortcutsDialog(QDialog):
 #  MAIN WINDOW
 # ═══════════════════════════════════════════════════════════════════════════════
 
-class DarkNetBrowser(QMainWindow):
+class BoneBrowser(QMainWindow):
 
     def __init__(self, crypto: CryptoEngine, config: dict):
         super().__init__()
@@ -1110,7 +1110,7 @@ class DarkNetBrowser(QMainWindow):
         self.tor.log_message.connect(self._on_tor_log)
 
         # ── Web Profile ──
-        self.web_profile = QWebEngineProfile("DarkNetProfile", self)
+        self.web_profile = QWebEngineProfile("BoneProfile", self)
         self.web_profile.setPersistentCookiesPolicy(
             QWebEngineProfile.PersistentCookiesPolicy.NoPersistentCookies
         )
@@ -2035,7 +2035,7 @@ def main():
     actual_socks = config.get("tor_socks_port", DEFAULT_TOR_SOCKS)
     boot_file.write_text(json.dumps({"tor_socks_port": actual_socks}))
 
-    browser = DarkNetBrowser(crypto, config)
+    browser = BoneBrowser(crypto, config)
     browser.show()
     browser.resize(1400, 900)
 

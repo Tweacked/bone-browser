@@ -1,5 +1,5 @@
 #!/bin/bash
-# DarkNet Browser Launcher
+# Bone Browser Launcher
 # Activates the venv and runs the browser
 
 DIR="$(cd "$(dirname "$0")" && pwd)"

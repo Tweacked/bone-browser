@@ -9,7 +9,7 @@ venv/
 env/
 
 # Bone Browser data
-.darknet-browser/
+.bone-browser/
 *.enc
 *.key
 *.log
