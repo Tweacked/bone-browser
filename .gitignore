@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+
+# Bone Browser data
+.darknet-browser/
+*.enc
+*.key
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build
+*.egg-info/
+dist/
+build/
+*.spec
+
+# Temp
+*.tmp
+*.bak
+*.cache

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#161b22"/>
+      <stop offset="100%" style="stop-color:#0d1117"/>
+    </linearGradient>
+    <linearGradient id="bone" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0f6fc"/>
+      <stop offset="100%" style="stop-color:#c9d1d9"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#58a6ff"/>
+      <stop offset="100%" style="stop-color:#1f6feb"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg)" stroke="#30363d" stroke-width="3"/>
+  
+  <!-- Inner ring -->
+  <circle cx="128" cy="128" r="105" fill="none" stroke="#30363d" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Bone shape -->
+  <g transform="translate(128,128) rotate(-45)" filter="url(#shadow)">
+    <!-- Bone shaft -->
+    <rect x="-12" y="-55" width="24" height="110" rx="8" fill="url(#bone)"/>
+    
+    <!-- Top left knob -->
+    <circle cx="-16" cy="-50" r="14" fill="url(#bone)"/>
+    <!-- Top right knob -->
+    <circle cx="16" cy="-50" r="14" fill="url(#bone)"/>
+    
+    <!-- Bottom left knob -->
+    <circle cx="-16" cy="50" r="14" fill="url(#bone)"/>
+    <!-- Bottom right knob -->
+    <circle cx="16" cy="50" r="14" fill="url(#bone)"/>
+    
+    <!-- Center detail lines -->
+    <rect x="-2" y="-30" width="4" height="60" rx="2" fill="#8b949e" opacity="0.4"/>
+  </g>
+  
+  <!-- Lock icon overlay (small, bottom-right) -->
+  <g transform="translate(170,170)">
+    <circle cx="0" cy="0" r="28" fill="url(#accent)"/>
+    <!-- Lock body -->
+    <rect x="-10" y="-4" width="20" height="16" rx="3" fill="#0d1117"/>
+    <!-- Lock shackle -->
+    <path d="M-7,-4 L-7,-12 A7,7 0 0,1 7,-12 L7,-4" fill="none" stroke="#0d1117" stroke-width="3" stroke-linecap="round"/>
+    <!-- Keyhole -->
+    <circle cx="0" cy="3" r="3" fill="#58a6ff"/>
+  </g>
+  
+  <!-- Border accent -->
+  <circle cx="128" cy="128" r="120" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
+</svg>
