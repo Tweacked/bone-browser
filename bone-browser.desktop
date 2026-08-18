@@ -1,10 +1,10 @@
 [Desktop Entry]
 Name=Bone Browser
 Comment=Secure Tor onion browser with AES-256 encryption
-Exec=/home/nado/.local/share/bone-browser/run.sh
-Icon=bone-browser
+Exec=INSTALL_DIR_PLACEHOLDER/run.sh
+Icon=INSTALL_DIR_PLACEHOLDER/icon.png
 Terminal=false
 Type=Application
-Categories=Network;WebBrowser;Security;Settings;
+Categories=Network;WebBrowser;Security;
 Keywords=tor;onion;privacy;browser;anonymous;security;
 StartupWMClass=bone-browser

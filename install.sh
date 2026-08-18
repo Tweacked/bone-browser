@@ -52,7 +52,9 @@ cp "$SOURCE_DIR/icon.png" "$ICON_DIR/256x256/apps/bone-browser.png"
 
 # Install desktop entry
 echo "[5/6] Installing desktop entry..."
-sed "s|Exec=.*|Exec=$INSTALL_DIR/run.sh|g" "$SOURCE_DIR/bone-browser.desktop" > "$DESKTOP_DIR/bone-browser.desktop"
+sed -e "s|Exec=.*|Exec=$INSTALL_DIR/run.sh|g" \
+    -e "s|Icon=.*|Icon=$INSTALL_DIR/icon.png|g" \
+    "$SOURCE_DIR/bone-browser.desktop" > "$DESKTOP_DIR/bone-browser.desktop"
 chmod +x "$DESKTOP_DIR/bone-browser.desktop"
 
 # Create symlink in ~/.local/bin
