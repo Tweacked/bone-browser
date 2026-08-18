@@ -104,6 +104,33 @@ source .venv/bin/activate
 python3 browser.py
 ```
 
+### Linux App Menu Installation
+
+To add Bone Browser to your application menu (GNOME, KDE, XFCE, etc.):
+
+```bash
+# Clone and enter the repo
+git clone https://github.com/Tweacked/bone-browser.git
+cd bone-browser
+
+# Run the installer
+chmod +x install.sh
+./install.sh
+```
+
+This installs:
+- App to `~/.local/share/bone-browser/`
+- Desktop entry to `~/.local/share/applications/`
+- Icons to `~/.local/share/icons/hicolor/`
+- Command-line shortcut to `~/.local/bin/bone-browser`
+
+After installation, search for **"Bone Browser"** in your app menu.
+
+To uninstall:
+```bash
+~/.local/share/bone-browser/uninstall.sh
+```
+
 ---
 
 ## Keyboard Shortcuts
