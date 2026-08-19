@@ -283,18 +283,44 @@ class TorManager(QObject):
             self._controller = stem.control.Controller.from_port(
                 port=self.control_port
             )
-            # Authenticate with the cookie file from our data directory.
-            # Also try the default path as fallback for existing tor processes.
+            # Try multiple authentication methods
+            auth_success = False
+
+            # Method 1: Explicit cookie path (our custom data directory)
             cookie_path = str(TOR_DATA_DIR / "control_auth_cookie")
             if os.path.exists(cookie_path):
                 try:
-                    stem.connection.authenticate(self._controller, cookie_path=cookie_path)
-                except Exception:
-                    self._controller.authenticate()
-            else:
-                self._controller.authenticate()
+                    self._controller.authenticate(cookie_path=cookie_path)
+                    auth_success = True
+                    self.log_message.emit("Control port authenticated (cookie).")
+                except Exception as e:
+                    self.log_message.emit(f"Cookie auth failed: {e}")
 
-            self.log_message.emit("Control port authenticated.")
+            # Method 2: Default authentication (looks in default locations)
+            if not auth_success:
+                try:
+                    self._controller.authenticate()
+                    auth_success = True
+                    self.log_message.emit("Control port authenticated (default).")
+                except Exception as e:
+                    self.log_message.emit(f"Default auth failed: {e}")
+
+            # Method 3: Read cookie file manually and pass as password
+            if not auth_success and os.path.exists(cookie_path):
+                try:
+                    with open(cookie_path, "rb") as f:
+                        cookie_data = f.read()
+                    self._controller.authenticate(cookie_data.hex())
+                    auth_success = True
+                    self.log_message.emit("Control port authenticated (hex cookie).")
+                except Exception as e:
+                    self.log_message.emit(f"Hex cookie auth failed: {e}")
+
+            if not auth_success:
+                self.log_message.emit("All authentication methods failed.")
+                self._controller.close()
+                self._controller = None
+                return
 
             self._controller.add_event_listener(
                 self._on_circuit_event, stem.control.EventType.CIRC
