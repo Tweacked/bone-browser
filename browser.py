@@ -149,9 +149,33 @@ class TorManager(QObject):
         return self._connected
 
     def _find_tor_binary(self):
+        """Locate the tor binary on Linux, macOS, or Windows."""
+        # Linux/macOS paths
         for path in ["/usr/bin/tor", "/usr/local/bin/tor", shutil.which("tor")]:
             if path and os.path.isfile(path):
                 return path
+        # Windows paths
+        if os.name == "nt":
+            # Check common install locations
+            program_files = [
+                os.environ.get("ProgramFiles", "C:\\Program Files"),
+                os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"),
+                os.environ.get("LOCALAPPDATA", ""),
+            ]
+            for pf in program_files:
+                if not pf:
+                    continue
+                candidates = [
+                    os.path.join(pf, "Tor Browser", "Browser", "TorBrowser", "Tor", "tor.exe"),
+                    os.path.join(pf, "Tor", "tor.exe"),
+                ]
+                for c in candidates:
+                    if os.path.isfile(c):
+                        return c
+            # Check if tor.exe is in PATH
+            tor_path = shutil.which("tor")
+            if tor_path:
+                return tor_path
         return None
 
     def _is_port_in_use(self, port):

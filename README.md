@@ -131,6 +131,40 @@ To uninstall:
 ~/.local/share/bone-browser/uninstall.sh
 ```
 
+### Windows Installation
+
+**Requirements:**
+- Python 3.10+ (download from [python.org](https://python.org))
+- Tor Browser (download from [torproject.org](https://www.torproject.org/download/))
+
+**Quick start:**
+```powershell
+# Clone the repo
+git clone https://github.com/Tweacked/bone-browser.git
+cd bone-browser
+
+# Run the installer (creates shortcuts + installs dependencies)
+python install_windows.py
+```
+
+This installs:
+- App to `%LOCALAPPDATA%\BoneBrowser\`
+- Start Menu shortcut
+- Desktop shortcut
+- Python virtual environment with dependencies
+
+After installation, search for **"Bone Browser"** in the Start Menu or double-click the Desktop shortcut.
+
+**Manual run (without installer):**
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install PyQt6-WebEngine stem cryptography
+python browser.py
+```
+
+**Note:** Tor must be installed separately. Download [Tor Browser](https://www.torproject.org/download/) and Bone Browser will auto-detect `tor.exe` from the install location.
+
 ---
 
 ## Keyboard Shortcuts
