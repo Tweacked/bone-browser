@@ -13,4 +13,7 @@ if not exist ".venv" (
     call .venv\Scripts\activate.bat
 )
 
+rem Add Qt DLLs and Tor to PATH
+set "PATH=%~dp0.venv\Lib\site-packages\PyQt6\Qt6\bin;%~dp0tor;%PATH%"
+
 python browser.py %*
