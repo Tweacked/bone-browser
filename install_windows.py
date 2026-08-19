@@ -7,6 +7,7 @@ Run: python install_windows.py
 
 import os
 import sys
+import ssl
 import shutil
 import subprocess
 import tarfile
@@ -28,17 +29,30 @@ TOR_BUNDLE_FILE = INSTALL_DIR / "tor-bundle.tar.gz"
 
 def create_shortcut(target, shortcut_path, icon_path, description, work_dir):
     """Create a Windows shortcut using PowerShell."""
-    ps_script = f'''
-$ws = New-Object -ComObject WScript.Shell
-$shortcut = $ws.CreateShortcut("{shortcut_path}")
-$shortcut.TargetPath = "{target}"
-$shortcut.Arguments = '/c "{work_dir}\\launch.bat"'
-$shortcut.WorkingDirectory = "{work_dir}"
-$shortcut.IconLocation = "{icon_path},0"
-$shortcut.Description = "{description}"
-$shortcut.Save()
-'''
-    subprocess.run(["powershell", "-Command", ps_script], capture_output=True, check=True)
+    # Use forward slashes for PowerShell paths to avoid escape issues
+    ps_target = target.replace("\\", "/")
+    ps_shortcut = str(shortcut_path).replace("\\", "/")
+    ps_icon = str(icon_path).replace("\\", "/")
+    ps_work = str(work_dir).replace("\\", "/")
+    ps_args = f'/c "{work_dir}\\launch.bat"'.replace("\\", "/")
+
+    ps_script = (
+        f"$ws = New-Object -ComObject WScript.Shell\n"
+        f"$s = $ws.CreateShortcut('{ps_shortcut}')\n"
+        f"$s.TargetPath = '{ps_target}'\n"
+        f"$s.Arguments = '{ps_args}'\n"
+        f"$s.WorkingDirectory = '{ps_work}'\n"
+        f"$s.IconLocation = '{ps_icon},0'\n"
+        f"$s.Description = '{description}'\n"
+        f"$s.Save()"
+    )
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", ps_script],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        print(f"  WARNING: Shortcut creation failed: {result.stderr[:200]}")
+    return result.returncode == 0
 
 
 def download_tor():
@@ -46,21 +60,43 @@ def download_tor():
     print("  Downloading Tor Expert Bundle...")
     print(f"  URL: {TOR_BUNDLE_URL}")
 
-    try:
-        def progress(block, block_size, total):
-            downloaded = block * block_size
-            if total > 0:
-                pct = min(100, downloaded * 100 // total)
-                bar = "█" * (pct // 2) + "░" * (50 - pct // 2)
-                print(f"\r  [{bar}] {pct}%  ", end="", flush=True)
+    def progress(block, block_size, total):
+        downloaded = block * block_size
+        if total > 0:
+            pct = min(100, downloaded * 100 // total)
+            bar = chr(9608) * (pct // 2) + chr(9617) * (50 - pct // 2)
+            print(f"\r  [{bar}] {pct}%  ", end="", flush=True)
 
+    downloaded_ok = False
+
+    # Try normal download
+    try:
         urllib.request.urlretrieve(TOR_BUNDLE_URL, str(TOR_BUNDLE_FILE), progress)
         print()
+        downloaded_ok = True
     except Exception as e:
         print(f"\n  Download failed: {e}")
-        print("  You can manually download tor.exe from:")
-        print("  https://www.torproject.org/download/tor/")
-        print(f"  Place it in: {TOR_DIR}")
+
+    # Retry with unverified SSL if first attempt failed
+    if not downloaded_ok:
+        try:
+            print("  Retrying without SSL verification...")
+            ctx = ssl._create_unverified_context()
+            https_handler = urllib.request.HTTPSHandler(context=ctx)
+            opener = urllib.request.build_opener(https_handler)
+            urllib.request.install_opener(opener)
+            urllib.request.urlretrieve(TOR_BUNDLE_URL, str(TOR_BUNDLE_FILE), progress)
+            print()
+            downloaded_ok = True
+        except Exception as e2:
+            print(f"  Retry failed: {e2}")
+
+    if not downloaded_ok:
+        print()
+        print("  Manual install:")
+        print(f"  1. Download tor.exe from https://www.torproject.org/download/tor/")
+        print(f"  2. Place it in: {TOR_DIR}")
+        print()
         return False
 
     print("  Extracting Tor...")
@@ -76,9 +112,9 @@ def download_tor():
     except Exception as e:
         print(f"  Extraction failed: {e}")
         return False
-
-    if TOR_BUNDLE_FILE.exists():
-        TOR_BUNDLE_FILE.unlink()
+    finally:
+        if TOR_BUNDLE_FILE.exists():
+            TOR_BUNDLE_FILE.unlink()
 
     tor_exe = TOR_DIR / "tor.exe"
     if not tor_exe.exists():
@@ -95,9 +131,9 @@ def download_tor():
 
 
 def main():
-    print("╔══════════════════════════════════════════╗")
-    print("║    Bone Browser - Windows Installer      ║")
-    print("╚══════════════════════════════════════════╝")
+    print("========================================")
+    print("    Bone Browser - Windows Installer")
+    print("========================================")
     print()
 
     if sys.version_info < (3, 10):
@@ -116,38 +152,41 @@ def main():
             shutil.copy2(src, INSTALL_DIR / f)
             print(f"  Copied: {f}")
 
-    # [3/7] Create launcher bat (called by shortcut via cmd.exe)
+    # [3/7] Create launcher bat
     print("[3/7] Creating launcher...")
     launch_bat = INSTALL_DIR / "launch.bat"
-    launch_bat.write_text(f'''@echo off
-cd /d "%~dp0"
-if not exist ".venv" (
-    echo Setting up Bone Browser...
-    python -m venv .venv
-    call .venv\\Scripts\\activate.bat
-    pip install PyQt6-WebEngine stem cryptography -q
-) else (
-    call .venv\\Scripts\\activate.bat
-)
-rem Add Qt DLLs and Tor to PATH
-set "PATH=%~dp0.venv\\Lib\\site-packages\\PyQt6\\Qt6\\bin;%~dp0tor;%PATH%"
-start "" python browser.py
-''')
+    bat_content = (
+        "@echo off\r\n"
+        "cd /d \"%~dp0\"\r\n"
+        "if not exist \".venv\" (\r\n"
+        "    echo Setting up Bone Browser...\r\n"
+        "    python -m venv .venv\r\n"
+        "    call .venv\\Scripts\\activate.bat\r\n"
+        "    pip install PyQt6-WebEngine stem cryptography -q\r\n"
+        ") else (\r\n"
+        "    call .venv\\Scripts\\activate.bat\r\n"
+        ")\r\n"
+        "set \"PATH=%~dp0.venv\\Lib\\site-packages\\PyQt6\\Qt6\\bin;%~dp0tor;%PATH%\"\r\n"
+        "start \"\" python browser.py\r\n"
+    )
+    launch_bat.write_text(bat_content)
     print(f"  Created: {launch_bat}")
 
     # [4/7] Download Tor
     print("[4/7] Installing Tor...")
     tor_installed = download_tor()
     if not tor_installed:
-        print("  Tor download failed. Bone Browser will try to find Tor elsewhere.")
+        print("  Continuing without bundled Tor...")
 
     # [5/7] Install Python dependencies
     print("[5/7] Installing Python dependencies...")
     venv_dir = INSTALL_DIR / ".venv"
     subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], capture_output=True)
     pip = str(venv_dir / "Scripts" / "pip.exe")
-    subprocess.run([pip, "install", "PyQt6-WebEngine", "stem", "cryptography", "-q"],
-                   capture_output=True)
+    subprocess.run(
+        [pip, "install", "PyQt6-WebEngine", "stem", "cryptography", "-q"],
+        capture_output=True
+    )
     print("  Dependencies installed.")
 
     # [6/7] Create Start Menu shortcut
@@ -157,30 +196,36 @@ start "" python browser.py
     if not Path(icon_ico).exists():
         icon_ico = str(INSTALL_DIR / "icon.png")
 
-    shortcut_path = str(START_MENU / f"{APP_NAME}.lnk")
-    create_shortcut(
+    shortcut_path = START_MENU / f"{APP_NAME}.lnk"
+    ok = create_shortcut(
         target="cmd.exe",
         shortcut_path=shortcut_path,
         icon_path=icon_ico,
         description="Secure Tor onion browser",
         work_dir=str(INSTALL_DIR)
     )
+    if ok:
+        print(f"  Created: {shortcut_path}")
+    else:
+        print("  Shortcut creation failed, but app can still run from launch.bat")
 
     # [7/7] Create Desktop shortcut
     print("[7/7] Creating Desktop shortcut...")
-    desktop_shortcut = str(DESKTOP / f"{APP_NAME}.lnk")
-    create_shortcut(
+    desktop_shortcut = DESKTOP / f"{APP_NAME}.lnk"
+    ok = create_shortcut(
         target="cmd.exe",
         shortcut_path=desktop_shortcut,
         icon_path=icon_ico,
         description="Secure Tor onion browser",
         work_dir=str(INSTALL_DIR)
     )
+    if ok:
+        print(f"  Created: {desktop_shortcut}")
 
     print()
-    print("╔══════════════════════════════════════════╗")
-    print("║         Installation Complete!           ║")
-    print("╚══════════════════════════════════════════╝")
+    print("========================================")
+    print("      Installation Complete!")
+    print("========================================")
     print()
     print(f"  Start Menu: Search for '{APP_NAME}'")
     print(f"  Desktop:    {APP_NAME}.lnk")
