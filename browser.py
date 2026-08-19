@@ -156,6 +156,11 @@ class TorManager(QObject):
                 return path
         # Windows paths
         if os.name == "nt":
+            # Check app's bundled Tor directory first
+            app_dir = Path(__file__).parent / "tor"
+            tor_in_app = app_dir / "tor.exe"
+            if tor_in_app.is_file():
+                return str(tor_in_app)
             # Check common install locations
             program_files = [
                 os.environ.get("ProgramFiles", "C:\\Program Files"),
@@ -166,6 +171,7 @@ class TorManager(QObject):
                 if not pf:
                     continue
                 candidates = [
+                    os.path.join(pf, "BoneBrowser", "tor", "tor.exe"),
                     os.path.join(pf, "Tor Browser", "Browser", "TorBrowser", "Tor", "tor.exe"),
                     os.path.join(pf, "Tor", "tor.exe"),
                 ]
